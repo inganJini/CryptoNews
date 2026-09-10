@@ -40,4 +40,24 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+
+    // Compose
+    implementation(platform("androidx.compose:compose-bom:2026.08.00"))
+    implementation("androidx.compose.material3:material3")
+
+    // ViewModel + Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
+
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
+
+    // Retrofit 3
+    implementation("com.squareup.retrofit2:retrofit:3.0.0")
+
+    // Gson
+    implementation("com.squareup.retrofit2:converter-gson:3.0.0")
+
+    // OkHttp Logging
+    implementation("com.squareup.okhttp3:logging-interceptor:5.5.0")
 }
