@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cryptonews.data.remote.dto.MarketDto
 import com.example.cryptonews.data.repository.CoinRepository
+import com.example.cryptonews.domain.model.Coin
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
@@ -25,11 +26,7 @@ class CoinViewModel(
     val uiState: StateFlow<CoinUiState> =
         _uiState.asStateFlow()
 
-
-    private var markets:
-            List<MarketDto> =
-        emptyList()
-
+    private var markets: List<MarketDto> = emptyList()
 
     init {
 
@@ -42,7 +39,6 @@ class CoinViewModel(
     fun onQueryChanged(
         value: String
     ) {
-
         query.value = value
 
         _uiState.update {
@@ -54,24 +50,15 @@ class CoinViewModel(
 
 
     private fun loadMarkets() {
-
         viewModelScope.launch {
-
             runCatching {
-
                 repository.getMarkets()
-
             }.onSuccess {
-
                 markets = it
-
             }.onFailure {
-
                 _uiState.update { state ->
-
                     state.copy(
-                        errorMessage =
-                            it.message
+                        errorMessage = it.message
                     )
                 }
             }
@@ -80,66 +67,72 @@ class CoinViewModel(
 
 
     @OptIn(
-        FlowPreview::class,
-        ExperimentalCoroutinesApi::class
+        FlowPreview::class, ExperimentalCoroutinesApi::class
     )
     private fun observeQuery() {
 
-//        query.debounce(300)
-//            .map {
-//                it.trim()
-//            }
-//            .distinctUntilChanged()
-//            .mapLatest { keyword ->
-//
-//                if (
-//                    keyword.isBlank()
-//                ) {
-//
-//                    emptyList()
-//
-//                } else {
-//
-//                    _uiState.update {
-//
-//                        it.copy(
-//                            isLoading =
-//                                true,
-//                            errorMessage =
-//                                null
-//                        )
-//                    }
-//
-//                    search(
-//                        keyword
-//                    )
-//                }
-//            }
-//            .catch { throwable ->
-//
-//                _uiState.update {
-//
-//                    it.copy(
-//                        isLoading = false,
-//                        errorMessage = throwable.message
-//                    )
-//                }
-//            }
-//            .collectIn(
-//                viewModelScope
-//            ) { coins ->
-//
-//                _uiState.update {
-//
-//                    it.copy(
-//                        coins = coins,
-//                        isLoading = false
-//                    )
-//                    isLoading = false
-//                }
-//            }
+        query.debounce(300)
+            .map {
+                it.trim()
+            }
+            .distinctUntilChanged()
+            .mapLatest { keyword ->
+                if (keyword.isBlank()) {
+                    emptyList()
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = true,
+                            errorMessage = null
+                        )
+                    }
+                    search(
+                        keyword
+                    )
+                }
+            }
+            .catch {throwable ->
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = throwable.message
+                    )
+                }
+            }
+            .onEach { coins ->
+                _uiState.update {
+                    it.copy(
+                        coins = coins,
+                        isLoading = false
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
+    private suspend fun search(
+        keyword: String
+    ): List<Coin> {
+
+        val result =
+            markets.filter {
+                it.koreanName .contains(
+                                keyword,
+                                true
+                            )
+                || it.englishName .contains(
+                                keyword,
+                                true
+                            )
+                || it.market .contains(
+                                keyword,
+                                true
+                            )
+            }
+
+        return repository
+            .getTickers(result)
+    }
 
     private suspend fun searchCoin(
         query: String
@@ -152,7 +145,6 @@ class CoinViewModel(
                 errorMessage = null
             )
         }
-
 
         val filteredMarkets =
             markets.filter { market ->
